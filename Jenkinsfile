@@ -1,7 +1,5 @@
 pipeline {
-    agent {
-        any
-    }
+    agent any
 
     stages {
         stage('Cloning the project repository from BitBucket') {

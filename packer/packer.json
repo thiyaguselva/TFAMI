@@ -1,0 +1,75 @@
+{
+    "variables": {
+        "version": "0.0.1",
+        "vpc": "",
+        "subnet": "",
+        "security_group": "",
+        "aws_region": "",                                       
+        "ami_name": "test-Latest-AMZN-{{isotime}}",
+        "source_ami": "",
+        "s3_bucket_region": "",
+        "s3_bucket_name": "",
+        "s3_artifact_name": "sampletestapp.zip",
+        "aws_access_key": "",
+        "aws_secret_key": ""
+    },
+    "builders": [
+        {
+            "name": "AWS AMI Builder - TEST",
+            "type": "amazon-ebs",
+            "region": "{{user `aws_region`}}",
+            "source_ami": "{{user `source_ami`}}",
+            "instance_type": "t2.medium",
+            "ami_name": "{{user `ami_name` | clean_resource_name}}",
+            "tags": {
+                "Name": "{{user `ami_name`}}"
+            },
+            "run_tags": {
+                "Name": "{{user `ami_name`}}"
+            },
+            "run_volume_tags": {
+                "Name": "{{user `ami_name`}}"
+            },
+            "snapshot_tags": {
+                "Name": "{{user `ami_name`}}"
+            },
+            "ami_description": "Amazon Windows Server With IIS",
+            "vpc_id": "{{user `vpc`}}",
+            "subnet_id": "{{user `subnet`}}",
+            "security_group_ids": "{{user `security_group`}}",
+            "associate_public_ip_address": true,
+            "communicator": "winrm",
+            "winrm_username": "Administrator",
+            "winrm_password": "Hitachi3Admin!!!!",
+            "winrm_port": 5986,
+            "winrm_timeout": "15m",
+            "winrm_use_ssl": true,
+            "winrm_insecure": true,
+            "user_data_file": "./scripts\\bootstrap_win.txt"
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "powershell",
+            "inline": [
+                "Set-AWSCredentials -AccessKey {{user `aws_access_key`}} -SecretKey {{user `aws_secret_key`}} -StoreAs aws-creds"
+            ]
+        },
+        {
+            "script": "./scripts\\DeployAspNet.ps1",
+            "type": "powershell",
+            "environment_vars": [
+                "s3_bucket_region={{user `s3_bucket_region`}}",
+                "s3_bucket_name={{user `s3_bucket_name`}}",
+                "s3_artifact_name={{user `s3_artifact_name`}}",
+                "aws_profile=aws-creds"
+            ]
+        },
+        {
+            "type": "powershell",
+            "inline": [
+                "Remove-AWSCredentialProfile -ProfileName aws-creds -Confirm:$false"
+            ]
+        }
+    ]
+}
